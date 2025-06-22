@@ -5,6 +5,8 @@ include { variant_calling } from './variant_calling.nf'
 
 workflow dnaseq {
 
+	main:
+
 	if (!params.start_vcf) {
 		alignment()
 		bam_files = alignment.out
@@ -16,5 +18,8 @@ workflow dnaseq {
 			}
 	}
 
-	variant_calling(bam_files)
+	merged_vcf = variant_calling(bam_files)
+
+	emit:
+	merged_vcf
 }
