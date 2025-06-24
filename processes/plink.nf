@@ -9,7 +9,7 @@ process plink {
     path(pruned_vcf)
 
     output:
-    tuple path("*.bed"), path("*bim"), path("*fam"), path("*.log"), path("*.nosex"), emit: admixture_bed
+    tuple path("*.bed"), path("*bim"), path("*fam"), emit: admixture_bed
     tuple path("*.eigenval"), path("*.eigenvec"), emit: eigenvalues
    
     script:
