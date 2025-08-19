@@ -17,7 +17,7 @@ workflow admixture {
 
 	run_admixture(plink.out.admixture_bed, params.kmin, params.kmax)
 
-	plot_results(run_admixture.out.admixture_out, plink.out.eigenvalues, params.kmin, params.kmax)
+	plot_results(run_admixture.out.admixture_out, plink.out.eigenvalues)
 
 
 	emit:

@@ -11,7 +11,7 @@ process run_admixture {
     val max_k
 
     output:
-    tuple path("*.P"), path("*.Q"), path("CV_values.log"), path("samples.txt"), emit: admixture_out
+    tuple path("admixture.Q"), path("CV_values.log"), emit: admixture_out
    
     script:
 
@@ -28,12 +28,22 @@ process run_admixture {
 
     for (( k=$min_k; k<=$max_k; k++ ));
     do
+    header=""
+    for ((i=1; i<=k; i++));
+    do
+        header+="\$k:\$i "
+    done
+    header=\${header::-1}
     admixture --cv ${bed_file} \$k | tee \$(basename ${bed_file} .bed).\$k.log
+    sed -i "1i\${header}" merged_filtered.\${k}.Q
     done
        
     grep -h CV *.log | cut -f3,4 -d' ' | sed -E 's/.*K=([0-9]+)\\): ([0-9.eE+-]+)/\\1 \\2/' > CV_values.log
 
-    cut -f1 -d' ' ${fam_file} > samples.txt
+    awk '{if (\$1 == \$2) print \$1; else print \$1"_"\$2}' ${fam_file} > samples.txt
+    sed -i "1iSamples" samples.txt
+
+    paste -d ' ' samples.txt *.Q > admixture.Q
 
     """
 

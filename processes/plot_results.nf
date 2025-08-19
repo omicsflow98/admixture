@@ -6,10 +6,8 @@ process plot_results {
     container "${params.apptainer}/plot_admixture.sif"
 
     input:
-    tuple path(P_files), path(Q_files), path(CV_file), path(samples)
+    tuple path(admixture_out),path(CV_file)
     tuple path(eigenval), path(eigenvec)
-    val kmin
-    val kmax
 
     output:
     path("*.png"), emit: plots
@@ -17,7 +15,7 @@ process plot_results {
     script:
 
     """
-    plot_admixture.R -S ${samples} -A ./merged_filtered -E ${CV_file} -L ${kmin} -H ${kmax}
+    plot_admixture.R -Q ${admixture_out} -V ./merged_filtered -E ${CV_file}
       
     """
 
