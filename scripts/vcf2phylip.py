@@ -8,6 +8,14 @@ to process VCF files with sizes >1GB. For small VCF files the algorithm slows
 down as the number of taxa increases (but is still fast).
 
 Any ploidy is allowed, but binary NEXUS is produced only for diploid VCFs.
+
+IMPORTANT:
+
+THIS SCRIPT IS NOT WRITTEN BY OMICSFLOW98. IT IS ONLY INCLUDED HERE AS PART OF THE 
+PIPELINE AND ALL CREDIT FOR VC2PHYLIP.PY IS GIVEN TO ITS DEVELOPERS. 
+PLEASE SEE THE FOLLOWING CITATION:
+
+Ortiz, E.M. 2019. vcf2phylip v2.0: convert a VCF matrix into several matrix formats for phylogenetic analysis. DOI:10.5281/zenodo.2540861
 """
 
 __author__      = "Edgardo M. Ortiz"
