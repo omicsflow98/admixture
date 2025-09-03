@@ -34,8 +34,8 @@ process run_admixture {
         header+="\$k:\$i "
     done
     header=\${header::-1}
-    admixture --cv ${bed_file} \$k | tee \$(basename ${bed_file} .bed).\$k.log
-    sed -i "1i\${header}" merged_filtered.\${k}.Q
+    admixture -j16 --cv ${bed_file} \$k | tee \$(basename ${bed_file} .bed).\$k.log
+    sed -i "1i\${header}" merged.filtered.\${k}.Q
     done
        
     grep -h CV *.log | cut -f3,4 -d' ' | sed -E 's/.*K=([0-9]+)\\): ([0-9.eE+-]+)/\\1 \\2/' > CV_values.log

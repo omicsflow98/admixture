@@ -35,7 +35,7 @@ process mergedgvcf {
 
 	label 'gvcf_merge'
 
-        publishDir "${params.outdir}/output/gvcf_merged/"
+        publishDir "${params.outdir}/output/gvcf_merged/", mode : 'copy'
 	container "${params.apptainer}/gatk.sif"
 
         input:

@@ -8,6 +8,7 @@ process plot_results {
     input:
     tuple path(admixture_out),path(CV_file)
     tuple path(eigenval), path(eigenvec)
+    path plot_admixture
 
     output:
     path("*.png"), emit: plots
@@ -15,7 +16,7 @@ process plot_results {
     script:
 
     """
-    plot_admixture.R -Q ${admixture_out} -V ./merged_filtered -E ${CV_file}
+    Rscript ${plot_admixture} -Q ${admixture_out} -V ./merged.filtered -E ${CV_file}
       
     """
 

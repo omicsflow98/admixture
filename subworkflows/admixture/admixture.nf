@@ -2,8 +2,10 @@
 
 include { plink } from '../../processes/plink.nf'
 include { run_admixture } from '../../processes/admixture.nf'
-include { prune_snp } from '../../processes/prune_snp.nf'
+include { filter_vcf } from '../../processes/filter_vcf.nf'
 include { plot_results } from '../../processes/plot_results.nf'
+include { vcf2phylip } from '../../processes/vcf2phylip.nf'
+include { phylo_tree } from '../../processes/iqtree.nf'
 
 workflow admixture {
 	take:
@@ -11,13 +13,20 @@ workflow admixture {
 
 	main:
 
-	prune_snp(merged_vcf)
+	vcf_convert = file("${projectDir}/scripts/vcf2phylip.py")
+	plot_admix = file("${projectDir}/scripts/plot_results.R")
 
-	plink(prune_snp.out.pruned_vcf)
+	filter_vcf(merged_vcf)
+
+	plink(filter_vcf.out.filtered_vcf)
 
 	run_admixture(plink.out.admixture_bed, params.kmin, params.kmax)
 
-	plot_results(run_admixture.out.admixture_out, plink.out.eigenvalues)
+	vcf2phylip(filter_vcf.out.filtered_vcf, vcf_convert)
+
+	phylo_tree(vcf2phylip.out.phylip_file)
+
+	plot_results(run_admixture.out.admixture_out, plink.out.eigenvalues, plot_admix)
 
 
 	emit:
