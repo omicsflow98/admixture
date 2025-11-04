@@ -193,7 +193,7 @@ ggplot(pve, aes(PC, pve)) +
   theme_light()
 ggsave("variance.png")
 
-for (k_clust in opt$min_k:opt$maxk ) {
+for (k_clust in opt$min_k:opt$max_k ) {
   kmeans <- eclust(select(pca, c("PC1", "PC2")), "kmeans", k=k_clust)
   silhouette <- fviz_silhouette(kmeans)
   temp_mean <- mean(silhouette[["data"]][["sil_width"]])
