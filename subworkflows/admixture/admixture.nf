@@ -13,7 +13,6 @@ workflow admixture {
 
 	main:
 
-	vcf_convert = file("${projectDir}/scripts/vcf2phylip.py")
 	plot_admix = file("${projectDir}/scripts/plot_results.R")
 
 	filter_vcf(merged_vcf)
@@ -22,11 +21,11 @@ workflow admixture {
 
 	run_admixture(plink.out.admixture_bed, params.kmin, params.kmax)
 
-	vcf2phylip(filter_vcf.out.filtered_vcf, vcf_convert)
+	vcf2phylip(filter_vcf.out.filtered_vcf)
 
 	phylo_tree(vcf2phylip.out.phylip_file)
 
-	plot_results(run_admixture.out.admixture_out, plink.out.eigenvalues, plot_admix)
+	plot_results(run_admixture.out.admixture_out, plink.out.eigenvalues, phylo_tree.out.newick_tree, plot_admix, params.mink, params.maxk)
 
 
 	emit:

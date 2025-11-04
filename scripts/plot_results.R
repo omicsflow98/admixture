@@ -5,8 +5,6 @@ correlate_components <- function(k, k_min) {
   end_this_k = start_this_k+k-1
   end_prev_k = start_this_k-1
   start_prev_k = end_prev_k-(k-2)
-  # print (paste0("This K: ",start_this_k,":",end_this_k))
-  # print (paste0("Prev K: ",start_prev_k,":",end_prev_k))
   cor(raw_data[start_prev_k:end_prev_k], raw_data[start_this_k:end_this_k])
 }
 
@@ -69,6 +67,9 @@ suppressMessages(library(tidyr))
 suppressMessages(library(dplyr))
 suppressMessages(library(stringr))
 suppressMessages(library(optparse))
+suppressMessages(library(ggtree))
+suppressMessages(library(ape))
+suppressMessages(library(factoextra))
 
 option_list = list(
   make_option(c("-Q", "--Q_files"), default=NULL,
@@ -76,7 +77,13 @@ option_list = list(
   make_option(c("-V", "--Eigen"), default=NULL,
               help="directory that contains your eigen files for PCA", metavar = "Eigen files"),
   make_option(c("-E", "--cv_file"), default=NULL,
-              help="file containing your CV error values", metavar = "CV file")
+              help="file containing your CV error values", metavar = "CV file"),
+  make_option(c("-T", "--tree_file"), default=NULL,
+              help="file containing your newick tree", metavar = "tree file"),
+  make_option(c("-S", "--min_k"), default=NULL,
+              help="minimum k value for kmeans clustering", metavar = "minimum k"),
+  make_option(c("-B", "--max_k"), default=NULL,
+              help="maximum k value for kmeans clustering", metavar = "maximum k")
 );
 
 opt_parser = OptionParser(option_list = option_list);
@@ -96,8 +103,13 @@ ggplot(cv_plot, aes(x=K, y=CV_error)) +
   theme_light()
 ggsave("cv_plot.png")
 
+tree <- read.tree(opt$tree_file)
+order_clean <- gsub("[^a-zA-Z0-9]", "", tree[["tip.label"]])
+
 ## read data
-raw_data <- read_delim(opt$Q_files, " ", col_types = cols())
+raw_data <- read_delim(opt$Q_files, " ", col_types = cols()) %>%
+  mutate(Samples = factor(Samples, levels = tree[["tip.label"]])) %>%
+  arrange(Samples)
 
 ## Sort components of each K according to correlation with components of K-1. 
 ##   This needs to happen per K, otherwise the correlations will not match 
@@ -162,9 +174,13 @@ long_data %>%
   scale_fill_brewer(palette="Set3",name="K", labels=1:k_min)
 ggsave("admixture_bestk.png")
 
-pca <- read_table(paste0(basename(opt$Eigen),".eigenvec"), col_names = FALSE)
-pca <- pca[,-1]
-names(pca)[1] <- "ind"
+pca <- read_table(paste0(basename(opt$Eigen),".eigenvec"), col_names = FALSE) %>%
+  mutate(X1 = if_else(X1 == X2, X1, paste0(X1,X2))) %>%
+  select(-2) %>%
+  rename(ind = X1) %>%
+  mutate(ind = factor(ind, levels = order_clean)) %>%
+  arrange(ind)
+
 names(pca)[2:ncol(pca)] <- paste0("PC", 1:(ncol(pca)-1))
 
 eigenval <- scan(paste0(basename(opt$Eigen),".eigenval"))
@@ -177,10 +193,34 @@ ggplot(pve, aes(PC, pve)) +
   theme_light()
 ggsave("variance.png")
 
-ggplot(pca, aes(PC1, PC2)) +
+for (k_clust in opt$min_k:opt$maxk ) {
+  kmeans <- eclust(select(pca, c("PC1", "PC2")), "kmeans", k=k_clust)
+  silhouette <- fviz_silhouette(kmeans)
+  temp_mean <- mean(silhouette[["data"]][["sil_width"]])
+  if (temp_mean > sil_mean) {
+    best_k <- k_clust
+  }
+}
+
+kmeans <- eclust(select(pca, c("PC1", "PC2")), "kmeans", k=best_k)
+ggsave("eclust_plot.png")
+fviz_silhouette(kmeans)
+ggsave("silhouette.png")
+
+ggplot(pca, aes(x=PC1, y=PC2, fill=kmeans$cluster)) +
   geom_point(size = 3) +
   coord_equal() +
   theme_light() +
+  theme(legend.position = "none") +
   xlab(paste0("PC1 (", signif(pve$pve[1], 3), "%)")) +
   ylab(paste0("PC2 (", signif(pve$pve[2], 3), "%)"))
 ggsave("pca_plot.png")
+
+tip_annot <- data.frame(
+  label = tree$tip.label,
+  cluster = as.factor(kmeans$cluster)
+)
+
+ggtree(tree, layout="circular") %<+% 
+  tip_annot +
+  geom_tiplab(size=3, align=TRUE, offset=0.05, linetype="solid", aes(color = cluster)) 

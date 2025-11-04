@@ -7,7 +7,6 @@ process vcf2phylip {
 
     input:
     path filtered_vcf
-    path vcf2phylip_file
 
     output:
     path("sample.min4.phy"), emit: phylip_file
@@ -15,7 +14,7 @@ process vcf2phylip {
     script:
 
     """
-    python ${vcf2phylip_file} \
+    python /vcf2phylip/vcf2phylip.py \
     -i ${filtered_vcf} \
     --output-prefix sample
       
