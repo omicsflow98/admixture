@@ -3,11 +3,11 @@ process plot_results {
     label 'plot_results'
        
     publishDir "${params.outdir}/output/final_plots"
-    container "${params.apptainer}/plot_admixture.sif"
 
     input:
     tuple path(admixture_out),path(CV_file)
     tuple path(eigenval), path(eigenvec)
+    path phylip_file
     path newick_tree
     path plot_admixture
     val mink 
@@ -23,6 +23,7 @@ process plot_results {
     -Q ${admixture_out} \
     -V ./merged.filtered \
     -E ${CV_file} \
+    -P ${phylip_file} \
     -T ${newick_tree} \
     -S ${mink} \
     -B ${maxk}

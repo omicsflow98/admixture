@@ -25,7 +25,7 @@ workflow admixture {
 
 	phylo_tree(vcf2phylip.out.phylip_file)
 
-	plot_results(run_admixture.out.admixture_out, plink.out.eigenvalues, phylo_tree.out.newick_tree, plot_admix, params.mink, params.maxk)
+	plot_results(run_admixture.out.admixture_out, plink.out.eigenvalues, vcf2phylip.out.phylip_file, phylo_tree.out.newick_tree, plot_admix, params.mink, params.maxk)
 
 
 	emit:

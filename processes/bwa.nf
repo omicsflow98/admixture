@@ -20,14 +20,11 @@ process bwa {
         ${fastq[0]} \
         ${fastq[1]} \
         -t 16 \
-        -p \
-        -R "@RG\\tID:${SampName}\\tPL:${Platform}\\tPU:${Barcode}\\tLB:${LibName}\\tSM:${SampName}" > ${SampName}.bam
-
-	samtools sort \
-	-o ${SampName}.sortedByCoord.out.bam \
+        -R "@RG\\tID:${SampName}\\tPL:${Platform}\\tPU:${Barcode}\\tLB:${LibName}\\tSM:${SampName}" | \
+        samtools sort \
+        -o ${SampName}.sortedByCoord.out.bam \
 	-O bam \
-	--threads 15 \
-	${SampName}.bam
+	--threads 6
         
         """
 }

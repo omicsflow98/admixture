@@ -70,9 +70,6 @@ suppressMessages(library(optparse))
 suppressMessages(library(ggtree))
 suppressMessages(library(ape))
 suppressMessages(library(factoextra))
-suppressMessages(library(RColorBrewer))
-suppressMessages(library(phangorn))
-suppressMessages(library(ggrepel))
 
 option_list = list(
   make_option(c("-Q", "--Q_files"), default=NULL,
@@ -81,8 +78,6 @@ option_list = list(
               help="directory that contains your eigen files for PCA", metavar = "Eigen files"),
   make_option(c("-E", "--cv_file"), default=NULL,
               help="file containing your CV error values", metavar = "CV file"),
-  make_option(c("-P", "--phylip_file"), default=NULL,
-              help="file containing your phylip format data", metavar = "Phylip file"),
   make_option(c("-T", "--tree_file"), default=NULL,
               help="file containing your newick tree", metavar = "tree file"),
   make_option(c("-S", "--min_k"), default=NULL,
@@ -215,14 +210,7 @@ ggsave("eclust_plot.png")
 fviz_silhouette(kmeans)
 ggsave("silhouette.png")
 
-base_cols <- brewer.pal(max(3, min(best_k, 8)), "Set2")
-cluster_ids <- 1:best_k
-cluster_colours <- setNames(base_cols, cluster_ids)
-
-pca_cluster <- data.frame(label=pca$ind, cluster=kmeans$cluster)
-pca_colours <- cluster_colours[pca_cluster$cluster]
-
-ggplot(pca, aes(x=PC1, y=PC2, color=pca_colours)) +
+ggplot(pca, aes(x=PC1, y=PC2, color=as.factor(kmeans$cluster))) +
   geom_point(size = 3) +
   coord_equal() +
   theme_light() +
@@ -236,49 +224,8 @@ tip_annot <- data.frame(
   cluster = as.factor(kmeans$cluster)
 )
 
-dna <- read.dna(opt$phylip_file, format="sequential")
-distmat <- dist.dna(dna, model = "raw")
-
-net <- neighborNet(distmat)
-
-cluster_vec <- setNames(tip_annot$cluster, tip_annot$label)
-clusters_in_order <- cluster_vec[net$tip.label]
-tip_colours <- cluster_colours[clusters_in_order]
-
-plot(net, show.tip.labels=FALSE)
-coords <- get("last_plot.phylo", envir = .PlotPhyloEnv)
-
-tip_n <- coords$Ntip
-tip_x <- coords$xx[1:tip_n]
-tip_y <- coords$yy[1:tip_n]
-
-df <- data.frame(
-  x = coords$xx[1:tip_n],
-  y = coords$yy[1:tip_n],
-  label = net$tip.label,
-  color = tip_colours
-)
-
-edges <- data.frame(
-  x1 = coords$xx[net$edge[,1]],
-  y1 = coords$yy[net$edge[,1]],
-  x2 = coords$xx[net$edge[,2]],
-  y2 = coords$yy[net$edge[,2]]
-)
-
-library(ggrepel)
-
-ggplot() +
-  geom_segment(data = edges,
-               aes(x = x1, y = y1, xend = x2, yend = y2),
-               color = "gray50") +
-  geom_point(data = df, aes(x = x, y = y, color = color), size = 2) +
-  geom_text_repel(data = df, aes(x = x, y = y, label = label, color = color),
-                  size = 3,
-                  box.padding = 0.5,
-                  point.padding = 0.5,
-                  max.overlaps = Inf) +
-  theme_minimal() +
-  theme_void() +
+ggtree(tree, layout="circular") %<+% 
+  tip_annot +
+  geom_tiplab(size=3, align=TRUE, offset=0.05, linetype="solid", aes(color = cluster)) +
   theme(legend.position = "none")
-ggsave("splitstree.png")
+ggsave("phylogenetic tree.png")
